@@ -6,20 +6,69 @@ import java.util.function.Predicate;
 
 public class Tabuleiro {
 
-    private int linha;
+    private int linhas;
     private int colunas;
     private int minas;
 
     private final List<Campo> campos = new ArrayList<>();
+    private final List<Campoobs> observadores = new ArrayList<>();
 
-    public Tabuleiro(int linha, int colunas, int minas) {
-        this.linha = linha;
+    public Tabuleiro(int linhas, int colunas, int minas) {
+        this.linhas = linhas;
         this.colunas = colunas;
         this.minas = minas;
 
         gerarCampos();
-        associarOsVizinhos();
+        associarVizinhos();
         sortearMinas();
+    }
+
+    // Método para registrar observadores corretamente
+    public void registrarObservador(Campoobs observador) {
+        observadores.add(observador);
+    }
+
+    // Notifica todos os observadores com o evento
+    public void notificarObservadores(boolean resultado) {
+        for (Campoobs observador : observadores) {
+            if (resultado) {
+                observador.eventoOcorreu(null, Campoeveneto.ABRIR); // Indicativo de vitória
+            } else {
+                observador.eventoOcorreu(null, Campoeveneto.EXPLODIR); // Indicativo de derrota
+            }
+        }
+    }
+
+    public void abrir(int linha, int coluna) {
+        campos.parallelStream()
+                .filter(c -> c.getLinha() == linha && c.getColuna() == coluna)
+                .findFirst()
+                .ifPresent(Campo::abrir);
+    }
+
+    public void alternarMarcacao(int linha, int coluna) {
+        campos.parallelStream()
+                .filter(c -> c.getLinha() == linha && c.getColuna() == coluna)
+                .findFirst()
+                .ifPresent(Campo::alternarMarcacao);
+    }
+
+    private void gerarCampos() {
+        for (int linha = 0; linha < linhas; linha++) {
+            for (int coluna = 0; coluna < colunas; coluna++) {
+                var campo = new Campo(linha, coluna);
+                campo.registrarObservador(this::eventoOcorreu);
+                campos.add(campo);
+            }
+        }
+    }
+
+    private void associarVizinhos() {
+        for (Campo c1 : campos) {
+            for (Campo c2 : campos) {
+                c1.adicionarVizinho(c2);
+            }
+        }
     }
 
     private void sortearMinas() {
@@ -33,78 +82,50 @@ public class Tabuleiro {
         } while (minasArmadas < minas);
     }
 
-    private void associarOsVizinhos() {
-        for (Campo c1 : campos) {
-            for (Campo c2 : campos) {
-                c1.adicionarVizinho(c2);
-            }
-        }
-    }
-
-    private void gerarCampos() {
-        for (int i = 0; i < linha; i++) {
-            for (int j = 0; j < colunas; j++) {
-                campos.add(new Campo(i, j));
-            }
-        }
-    }
-
     public boolean objetivoAlcancado() {
-        return campos.stream().allMatch(Campo::objetivoAlcancado);
+        return campos.stream().allMatch(c -> c.isAberto() || c.isMarcado());
     }
 
     public void reiniciar() {
-        campos.forEach(Campo::reiniciar);
+        campos.forEach(Campo::resetar);
         sortearMinas();
     }
 
-    public void abrir(int linha, int coluna) {
-        campos.stream()
-              .filter(c -> c.getLinha() == linha && c.getColuna() == coluna)
-              .findFirst()
-              .ifPresent(Campo::abrir);
+    public void paracdada(java.util.function.Consumer<Campo> funcao) {
+        campos.forEach(funcao);
     }
 
-    public void marcar(int linha, int coluna) {
+    public int getLinha() {
+        return linhas;
+    }
+
+    public int getColunas() {
+        return colunas;
+    }
+
+    private void eventoOcorreu(Campo campo, Campoeveneto evento) {
+        if (evento == Campoeveneto.EXPLODIR) {
+            mostrarBombas();
+            notificarObservadores(false); // Notifica derrota
+        } else if (objetivoAlcancado()) {
+            notificarObservadores(true); // Notifica vitória
+        }
+    }
+
+    private void mostrarBombas() {
         campos.stream()
-              .filter(c -> c.getLinha() == linha && c.getColuna() == coluna)
-              .findFirst()
-              .ifPresent(Campo::alternarMarcacao);
+            .filter(Campo::isMinado)
+            .filter(c -> !c.isMarcado())
+            .forEach(c -> c.setAberto(true));
     }
 
     public void revelarMinas() {
         campos.stream()
-              .filter(Campo::isMinado)
-              .forEach(c -> c.setAberto(true));
+            .filter(Campo::isMinado)
+            .filter(c -> !c.isMarcado())
+            .forEach(c -> c.setAberto(true));
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        // Adiciona os índices das colunas
-        sb.append("   ");
-        for (int c = 0; c < colunas; c++) {
-            sb.append(" ");
-            sb.append(c);
-            sb.append(" ");
-        }
-        sb.append("\n");
-
-        int i = 0;
-        for (int l = 0; l < linha; l++) {
-            // Adiciona o índice da linha
-            sb.append(l);
-            sb.append(" ");
-            for (int c = 0; c < colunas; c++) {
-                sb.append(" ");
-                sb.append(campos.get(i).toString());
-                sb.append(" ");
-                i++;
-            }
-            sb.append("\n");
-        }
-
-        return sb.toString();
+    public void marcar(int i, int j) {
     }
 }

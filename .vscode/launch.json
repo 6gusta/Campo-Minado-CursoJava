@@ -4,6 +4,27 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TelaPrincipal",
+            "request": "launch",
+            "mainClass": "com.example.demo.visao.TelaPrincipal",
+            "projectName": "demo"
+        },
+        {
+            "type": "java",
+            "name": "TelaPricipal",
+            "request": "launch",
+            "mainClass": "com.example.demo.visao.TelaPricipal",
+            "projectName": "demo"
+        },
+        {
+            "type": "java",
+            "name": "testedotesmian",
+            "request": "launch",
+            "mainClass": "com.example.demo.testedotesmian",
+            "projectName": "demo"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"

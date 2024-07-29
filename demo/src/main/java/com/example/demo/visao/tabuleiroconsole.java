@@ -1,8 +1,6 @@
 package com.example.demo.visao;
 
 import java.util.Scanner;
-import java.util.regex.Pattern;
-
 import com.example.demo.execao.ExplosaoException;
 import com.example.demo.execao.SairException;
 import com.example.demo.modelo.Tabuleiro;
@@ -62,7 +60,7 @@ public class tabuleiroconsole {
                     System.out.println("Entrada inválida! As coordenadas devem ser números inteiros.");
                 }
             }
-             System.out.println(tabuleiro);
+            System.out.println(tabuleiro);
             System.out.println("Você ganhou!!!");
         } catch (ExplosaoException e) {
             System.out.println(tabuleiro);

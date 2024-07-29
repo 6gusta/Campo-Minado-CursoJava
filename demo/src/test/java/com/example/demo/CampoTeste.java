@@ -108,5 +108,4 @@ public class CampoTeste {
         assertTrue(campo11.isFechado(), "Campo diagonal deve estar fechado.");
     }
 
-    
 }
